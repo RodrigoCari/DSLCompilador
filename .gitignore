@@ -1,0 +1,34 @@
+# === PlatformIO build folders ===
+.pio/
+.pioenvs/
+.build/
+
+# === VS Code project settings (keep if shared intentionally) ===
+.vscode/
+
+# === Compiled source files ===
+*.o
+*.d
+*.elf
+*.bin
+*.map
+*.a
+
+# === Python bytecode ===
+__pycache__/
+*.py[cod]
+
+# === Misc generated files ===
+*.sconsign*
+idedata.json
+project.checksum
+
+# === Logs or debug files ===
+*.log
+
+# === Backup or temp files ===
+*~
+*.tmp
+
+# === Optional: ignore local workspace settings ===
+*.code-workspace

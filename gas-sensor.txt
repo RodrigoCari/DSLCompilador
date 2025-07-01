@@ -1,0 +1,13 @@
+CONNECT("broker.hivemq.com", 1883)
+
+SET GASSENSOR
+
+TOPIC PHOT_VALUE ("/indobot/p/gas/value")
+TOPIC PHOT_ALERT ("/indobot/p/gas/alert")
+
+TIMER PUBLISH_LIGHT (1000) {
+    PUBLISH(PHOT_VALUE, GASSENSOR.VALUE)
+    PUBLISH(PHOT_ALERT, GASSENSOR.ALERT)
+
+    PRINT("Value: " + GASSENSOR.VALUE + " --> " + GASSENSOR.ALERT + ": Gas leak detected or Environment safe")
+}
