@@ -1,21 +1,26 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <math.h>
 
 // Pines
-#define gasPin   36
-#define ledPin   2
+const int tempPin = 32;
+const int ledPin = 14;
+const float BETA = 3950;
 
 // Wi-Fi
 const char* ssid     = "Wokwi-GUEST";
 const char* password = "";
 
 const char* mqtt_server = "broker.hivemq.com";
-const char* topicGasValue = "/indobot/p/gas/value";
-const char* topicGasAlert = "/indobot/p/gas/alert";
+const char* topicTemp = "/indobot/p/temp/value";
+const char* topicAlert = "/indobot/p/temp/alert";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// Última temperatura publicada
+float lastTemperature = -1000.0;
 
 void setup_wifi() {
   Serial.print("Conectando a ");
@@ -30,17 +35,15 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {}
-
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Intentando MQTT...");
-    String clientId = "ESP32GasSensor-";
+    String clientId = "ESP32TempClient-";
     clientId += String(random(0xffff), HEX);
     if (client.connect(clientId.c_str())) {
-      Serial.println("Conectado");
+      Serial.println("conectado");
     } else {
-      Serial.print("Falló, rc=");
+      Serial.print("falló rc=");
       Serial.print(client.state());
       Serial.println(" reintentando en 5s");
       delay(5000);
@@ -49,36 +52,37 @@ void reconnect() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  pinMode(gasPin, INPUT);
+  Serial.begin(9600);
+  analogReadResolution(10);
+  pinMode(tempPin, INPUT);
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
   setup_wifi();
   client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
 }
 
 void loop() {
   if (!client.connected()) { reconnect(); }
   client.loop();
 
-  int gasValue = analogRead(gasPin);
-  Serial.print("Gas Sensor Value: ");
-  Serial.print(gasValue);
+  int analogValue = analogRead(tempPin);
+  float celsius = 1 / (log(1 / (1023. / analogValue - 1)) / BETA + 1.0 / 298.15) - 273.15;
 
-  char bufValue[6];
-  snprintf(bufValue, sizeof(bufValue), "%d", gasValue);
-  client.publish(topicGasValue, bufValue);
+  Serial.print("Temperature: ");
+  Serial.print(celsius);
+  Serial.println(" °C");
 
-  if (gasValue <= 700) {
+  char bufTemp[8];
+  dtostrf(celsius, 1, 2, bufTemp);
+  client.publish(topicTemp, bufTemp);
+
+  if (celsius >= 35.0) {
     digitalWrite(ledPin, HIGH);
-    Serial.println(" --> Danger! Gas leak detected!");
-    client.publish(topicGasAlert, "DANGER");
+    client.publish(topicAlert, "ALERTA");
   } else {
     digitalWrite(ledPin, LOW);
-    Serial.println(" --> Environment safe");
-    client.publish(topicGasAlert, "SAFE");
+    client.publish(topicAlert, "OK");
   }
 
   delay(1000);

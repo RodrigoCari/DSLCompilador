@@ -5,7 +5,7 @@ from semantic import SemanticAnalyzer
 # Importar generadores
 from codegen.photoresistor_codegen import PhotoresistorCodeGenerator
 from codegen.gassensor_codegen import GasSensorCodeGenerator
-# from codegen.otrosensor_codegen import OtroSensorCodeGenerator
+from codegen.temperaturesensor_codegen import TemperatureSensorCodeGenerator
 
 import sys
 
@@ -15,14 +15,18 @@ def select_codegen(sensor_name, tokens):
         return PhotoresistorCodeGenerator(tokens)
     elif sensor_name == "GASSENSOR":
         return GasSensorCodeGenerator(tokens)
-    # Agregar más sensores aquí
+    elif sensor_name == "TEMPSENSOR":
+        return TemperatureSensorCodeGenerator(tokens)
     else:
         raise ValueError(f"Error: Sensor '{sensor_name}' no tiene generador definido.")
 
 def main():
     try:
+        # Solicitar el nombre del archivo al usuario
+        input_file = input("Ingrese el nombre del archivo .txt (por ejemplo, 'gassensor.txt'): ").strip()
+
         # Paso 1: leer el código fuente DSL
-        with open("gas-sensor.txt", "r") as f:
+        with open(input_file, "r") as f:
             source_code = f.read()
 
         # Paso 2: análisis léxico
@@ -76,7 +80,7 @@ def main():
         print("Codigo C++ generado en Template/src/main.cpp")
 
     except FileNotFoundError:
-        print("Error: No se encontró el archivo 'gas-sensor.txt'")
+        print(f"Error: No se encontró el archivo '{input_file}'")
         sys.exit(1)
     except Exception as e:
         print("Error general:", e)

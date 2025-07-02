@@ -10,6 +10,7 @@ class SemanticAnalyzer:
         self.SENSOR_ATTRIBUTES = {
             "PHOTORESISTOR": {"LUX", "STATUS"},
             "GASSENSOR": {"VALUE", "ALERT"},
+            "TEMPSENSOR": {"VALUE", "ALERT"},
         }
 
     def analyze(self):
@@ -51,7 +52,7 @@ class SemanticAnalyzer:
         elif token_type == 314:  # SET SENSOR
             self.index += 1
             _, sensor_id = self.current()
-            self.sensors.add(sensor_id.upper())  # Asegura mayúsculas
+            self.sensors.add(sensor_id.upper())
             self.index += 1
 
         elif token_type == 303:  # TIMER ID (NUM) { ... }
