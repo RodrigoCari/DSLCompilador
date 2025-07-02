@@ -25,7 +25,7 @@ def select_codegen(sensor_name, tokens):
 def main():
     try:
         # Paso 1: leer el código fuente DSL
-        with open("gas-sensor.txt", "r") as f:
+        with open("ultrasonic.txt", "r") as f:
             source_code = f.read()
 
         # Paso 2: análisis léxico

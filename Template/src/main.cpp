@@ -2,17 +2,19 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-// Pines
-#define gasPin   36
-#define ledPin   2
+#define Trigger 2
+#define Echo    4
+#define ledPin  13
 
-// Wi-Fi
+long t;
+long d;
+
 const char* ssid     = "Wokwi-GUEST";
 const char* password = "";
-
 const char* mqtt_server = "broker.hivemq.com";
-const char* topicGasValue = "/indobot/p/gas/value";
-const char* topicGasAlert = "/indobot/p/gas/alert";
+
+const char* topicDistance = "/indobot/p/ultrasonic/distance";
+const char* topicAlert = "/indobot/p/ultrasonic/alert";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -35,12 +37,12 @@ void callback(char* topic, byte* payload, unsigned int length) {}
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Intentando MQTT...");
-    String clientId = "ESP32GasSensor-";
+    String clientId = "ESP32Ultrasonic-";
     clientId += String(random(0xffff), HEX);
     if (client.connect(clientId.c_str())) {
       Serial.println("Conectado");
     } else {
-      Serial.print("Falló, rc=");
+      Serial.print("FallÃ³, rc=");
       Serial.print(client.state());
       Serial.println(" reintentando en 5s");
       delay(5000);
@@ -50,36 +52,41 @@ void reconnect() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(gasPin, INPUT);
+  pinMode(Trigger, OUTPUT);
+  pinMode(Echo, INPUT);
   pinMode(ledPin, OUTPUT);
+  digitalWrite(Trigger, LOW);
   digitalWrite(ledPin, LOW);
-
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 }
 
 void loop() {
-  if (!client.connected()) { reconnect(); }
+  if (!client.connected()) reconnect();
   client.loop();
 
-  int gasValue = analogRead(gasPin);
-  Serial.print("Gas Sensor Value: ");
-  Serial.print(gasValue);
+  digitalWrite(Trigger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(Trigger, LOW);
 
-  char bufValue[6];
-  snprintf(bufValue, sizeof(bufValue), "%d", gasValue);
-  client.publish(topicGasValue, bufValue);
+  t = pulseIn(Echo, HIGH);
+  d = t / 59 + 1;
 
-  if (gasValue <= 700) {
+  Serial.print("Distancia: ");
+  Serial.print(d);
+  Serial.println(" cm");
+
+  char bufDist[8];
+  snprintf(bufDist, sizeof(bufDist), "%ld", d);
+  client.publish(topicDistance, bufDist);
+
+  if (d < 40) {
     digitalWrite(ledPin, HIGH);
-    Serial.println(" --> Danger! Gas leak detected!");
-    client.publish(topicGasAlert, "DANGER");
+    client.publish(topicAlert, "NEAR");
   } else {
     digitalWrite(ledPin, LOW);
-    Serial.println(" --> Environment safe");
-    client.publish(topicGasAlert, "SAFE");
+    client.publish(topicAlert, "CLEAR");
   }
-
   delay(1000);
 }
