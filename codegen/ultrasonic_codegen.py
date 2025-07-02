@@ -22,30 +22,34 @@ class UltrasonicCodeGenerator(BaseCodeGenerator):
             token_type, value = self.current()
 
             if token_type == 308:  # CONNECT
-                self.index += 2  # skip CONNECT(
+                self.index += 2  # skip CONNECT (
                 _, broker = self.current(); self.index += 1
                 self.broker = broker.strip('"')
                 self.index += 2  # skip , NUM )
+                self.expect(270)  # )
 
             elif token_type == 300:  # TOPIC
                 self.index += 1
                 _, name = self.current(); self.index += 1
-                self.index += 1  # skip (
+                self.expect(269)  # (
                 _, path = self.current(); self.index += 1
                 self.topics[name] = path.strip('"')
-                self.index += 1  # skip )
+                self.expect(270)  # )
 
             elif token_type == 303:  # TIMER
-                self.index += 2  # skip TIMER ID (
-                _, val = self.current(); self.index += 1
+                self.index += 1  # TIMER
+                self.index += 1  # ID
+                self.expect(269)  # (
+                _, val = self.current(); self.index += 1  # NUM
                 self.interval = int(val)
-                self.index += 2  # skip ) {
-                while self.current()[0] in [302, 315]:
+                self.expect(270)  # )
+                self.expect(275)  # {
+                while self.current()[0] in [302, 315]:  # PUBLISH, PRINT
                     self.index += 1
                     while self.current()[0] != 270:
                         self.index += 1
-                    self.index += 1
-                self.index += 1  # skip }
+                    self.index += 1  # skip )
+                self.expect(276)  # }
 
             else:
                 self.index += 1
@@ -160,7 +164,7 @@ class UltrasonicCodeGenerator(BaseCodeGenerator):
     def generate_diagram_json(self):
         diagram = {
             "version": 1,
-            "author": "Carlos Ram\u00edrez",
+            "author": "Carlos Ramírez",
             "editor": "wokwi",
             "parts": [
                 { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": -1.66, "left": -5.9, "rotate": 90, "attrs": {} },
@@ -179,6 +183,6 @@ class UltrasonicCodeGenerator(BaseCodeGenerator):
             ],
             "dependencies": {}
         }
-        with open("diagram.json", "w") as f:
+        with open("Template/diagram.json", "w") as f:
             json.dump(diagram, f, indent=2)
         print("[GENERATOR] Archivo diagram.json generado para ULTRASONIC.")
