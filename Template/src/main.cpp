@@ -2,23 +2,22 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-// Pines
-const int pirPin = 2;
-const int ledPin = 5;
+#define POT_PIN 35
 
-// Wi-Fi
-const char* ssid     = "Wokwi-GUEST";
+const char* ssid = "Wokwi-GUEST";
 const char* password = "";
-
 const char* mqtt_server = "broker.hivemq.com";
-const char* topicState = "/indobot/p/pir/state";
-const char* topicStatus = "/indobot/p/pir/status";
+
+const char* topicRaw = "/indobot/p/pot/raw";
+const char* topicVolt = "/indobot/p/pot/voltage";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+unsigned long lastMsgTime = 0;
 
-// Guarda el último estado para publicar solo cuando cambie
-int lastPirState = LOW;
+float floatMap(float x, float in_min, float in_max, float out_min, float out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 void setup_wifi() {
   Serial.print("Conectando a ");
@@ -29,35 +28,30 @@ void setup_wifi() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWi-Fi OK, IP:");
+  Serial.println("\nWiFi conectada, IP:");
   Serial.println(WiFi.localIP());
 }
 
+void callback(char* topic, byte* payload, unsigned int length) {}
+
 void reconnect() {
   while (!client.connected()) {
-    Serial.print("Intentando MQTT...");
+    Serial.print("Intentando conexiÃ³n MQTT...");
     String clientId = "ESP32Client-";
     clientId += String(random(0xffff), HEX);
     if (client.connect(clientId.c_str())) {
       Serial.println("conectado");
     } else {
-      Serial.print("falló rc=");
+      Serial.print("fallÃ³, rc=");
       Serial.print(client.state());
-      Serial.println(" reintentando en 5s");
+      Serial.println(" â€” reintentando en 5s");
       delay(5000);
     }
   }
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  // No se usa
-}
-
 void setup() {
-  pinMode(pirPin, INPUT);
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
-
+  pinMode(POT_PIN, INPUT);
   Serial.begin(115200);
   setup_wifi();
   client.setServer(mqtt_server, 1883);
@@ -67,26 +61,20 @@ void setup() {
 void loop() {
   if (!client.connected()) reconnect();
   client.loop();
+  unsigned long now = millis();
+  if (now - lastMsgTime > 1000) {
+    lastMsgTime = now;
+    int analogValue = analogRead(POT_PIN);
+    float voltage = floatMap(analogValue, 0, 4095, 0.0, 3.3);
 
-  int pirState = digitalRead(pirPin);
-  if (pirState != lastPirState) {
-    lastPirState = pirState;
+    char bufRaw[8];
+    char bufVolt[16];
+    snprintf(bufRaw, sizeof(bufRaw), "%d", analogValue);
+    snprintf(bufVolt, sizeof(bufVolt), "%.2f", voltage);
 
-    digitalWrite(ledPin, pirState == HIGH ? HIGH : LOW);
-
-    char bufState[2];
-    char bufStatus[12];
-    snprintf(bufState, sizeof(bufState), "%d", pirState);
-    snprintf(bufStatus, sizeof(bufStatus), pirState == HIGH ? "MOTION" : "NO_MOTION");
-
-    client.publish(topicState, bufState);
-    client.publish(topicStatus, bufStatus);
-
-    Serial.print("PIR raw: ");
-    Serial.print(bufState);
-    Serial.print(" | Estado: ");
-    Serial.println(bufStatus);
+    Serial.print("Pot raw: ");
+    Serial.print(bufRaw);
+    Serial.print(" | Voltage: ");
+    Serial.println(bufVolt);
   }
-
-  delay(1000);
 }

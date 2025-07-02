@@ -9,6 +9,7 @@ from codegen.gassensor_codegen import GasSensorCodeGenerator
 from codegen.ultrasonic_codegen import UltrasonicCodeGenerator
 from codegen.temperaturesensor_codegen import TemperatureSensorCodeGenerator
 from codegen.motionsensor_codegen import MotionSensorCodeGenerator
+from codegen.potentiometer_codegen import PotentiometerCodeGenerator
 
 import sys
 
@@ -24,6 +25,8 @@ def select_codegen(sensor_name, tokens):
         return TemperatureSensorCodeGenerator(tokens)
     elif sensor_name == "MOTIONSENSOR":
         return MotionSensorCodeGenerator(tokens)
+    elif sensor_name == "POTENTIOMETER":
+        return PotentiometerCodeGenerator(tokens)
     else:
         raise ValueError(f"Error: Sensor '{sensor_name}' no tiene generador definido.")
 
