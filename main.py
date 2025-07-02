@@ -5,6 +5,8 @@ from semantic import SemanticAnalyzer
 # Importar generadores
 from codegen.photoresistor_codegen import PhotoresistorCodeGenerator
 from codegen.gassensor_codegen import GasSensorCodeGenerator
+# from codegen.otrosensor_codegen import OtroSensorCodeGenerator
+from codegen.ultrasonic_codegen import UltrasonicCodeGenerator
 from codegen.temperaturesensor_codegen import TemperatureSensorCodeGenerator
 
 import sys
@@ -15,6 +17,8 @@ def select_codegen(sensor_name, tokens):
         return PhotoresistorCodeGenerator(tokens)
     elif sensor_name == "GASSENSOR":
         return GasSensorCodeGenerator(tokens)
+    elif sensor_name == "ULTRASONIC":
+        return UltrasonicCodeGenerator(tokens)
     elif sensor_name == "TEMPSENSOR":
         return TemperatureSensorCodeGenerator(tokens)
     else:

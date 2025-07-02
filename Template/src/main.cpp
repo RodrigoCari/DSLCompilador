@@ -8,10 +8,8 @@ const int tempPin = 32;
 const int ledPin = 14;
 const float BETA = 3950;
 
-// Wi-Fi
 const char* ssid     = "Wokwi-GUEST";
 const char* password = "";
-
 const char* mqtt_server = "broker.hivemq.com";
 const char* topicTemp = "/indobot/p/temp/value";
 const char* topicAlert = "/indobot/p/temp/alert";
@@ -56,14 +54,14 @@ void setup() {
   analogReadResolution(10);
   pinMode(tempPin, INPUT);
   pinMode(ledPin, OUTPUT);
+  digitalWrite(Trigger, LOW);
   digitalWrite(ledPin, LOW);
-
   setup_wifi();
   client.setServer(mqtt_server, 1883);
 }
 
 void loop() {
-  if (!client.connected()) { reconnect(); }
+  if (!client.connected()) reconnect();
   client.loop();
 
   int analogValue = analogRead(tempPin);
@@ -84,6 +82,5 @@ void loop() {
     digitalWrite(ledPin, LOW);
     client.publish(topicAlert, "OK");
   }
-
   delay(1000);
 }
