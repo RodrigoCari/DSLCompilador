@@ -12,6 +12,7 @@ class SemanticAnalyzer:
             "GASSENSOR": {"VALUE", "ALERT"},
             "ULTRASONIC": {"DISTANCE", "ALERT"},
             "TEMPSENSOR": {"VALUE", "ALERT"},
+            "MOTIONSENSOR": {"STATE", "STATUS"},
         }
 
     def analyze(self):

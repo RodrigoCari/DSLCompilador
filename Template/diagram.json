@@ -1,39 +1,29 @@
 {
   "version": 1,
-  "author": "Shaggy",
+  "author": "Ulises Emmanuel Piscil Chino",
   "editor": "wokwi",
   "parts": [
     {
       "type": "wokwi-esp32-devkit-v1",
       "id": "esp",
-      "top": -36.39,
-      "left": -2.8,
+      "top": 0,
+      "left": 0,
       "attrs": {}
     },
     {
-      "type": "wokwi-ntc-temperature-sensor",
-      "id": "ntc1",
-      "top": -33.68,
-      "left": 131.38,
-      "rotate": 90,
+      "type": "wokwi-pir-motion-sensor",
+      "id": "pir2",
+      "top": 23.2,
+      "left": -112.98,
       "attrs": {}
     },
     {
       "type": "wokwi-led",
-      "id": "led1",
-      "top": -31.59,
-      "left": -84.06,
+      "id": "led2",
+      "top": 34.8,
+      "left": 138.2,
       "attrs": {
         "color": "red"
-      }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r1",
-      "top": 101.21,
-      "left": -121.88,
-      "attrs": {
-        "value": "5600"
       }
     }
   ],
@@ -51,53 +41,45 @@
       []
     ],
     [
-      "esp:GND.1",
-      "ntc1:GND",
-      "black",
+      "led2:A",
+      "esp:D5",
+      "green",
       [
-        "h0"
+        "v0"
       ]
     ],
     [
-      "ntc1:VCC",
-      "esp:3V3",
+      "led2:C",
+      "esp:GND.1",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "pir2:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "pir2:OUT",
+      "esp:D2",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "pir2:VCC",
+      "esp:VIN",
       "red",
       [
         "v0"
       ]
-    ],
-    [
-      "ntc1:OUT",
-      "esp:D32",
-      "green",
-      [
-        "v0"
-      ]
-    ],
-    [
-      "r1:1",
-      "led1:C",
-      "green",
-      [
-        "h-7.64",
-        "v2.81"
-      ]
-    ],
-    [
-      "led1:A",
-      "esp:D14",
-      "green",
-      [
-        "v0"
-      ]
-    ],
-    [
-      "r1:2",
-      "esp:GND.2",
-      "green",
-      [
-        "h0"
-      ]
     ]
-  ]
+  ],
+  "dependencies": {}
 }
