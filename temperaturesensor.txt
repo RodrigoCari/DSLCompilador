@@ -1,0 +1,13 @@
+CONNECT("broker.hivemq.com", 1883)
+
+SET TEMPSENSOR
+
+TOPIC TEMP_VALUE ("/indobot/p/temp/value")
+TOPIC TEMP_ALERT ("/indobot/p/temp/alert")
+
+TIMER PUBLISH_LIGHT (1000) {
+    PUBLISH(TEMP_VALUE, TEMPSENSOR.VALUE)
+    PUBLISH(TEMP_ALERT, TEMPSENSOR.ALERT)
+
+    PRINT("Value: " + TEMPSENSOR.VALUE + " ℃ --> " + TEMPSENSOR.ALERT)
+}

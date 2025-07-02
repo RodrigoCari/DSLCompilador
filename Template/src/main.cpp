@@ -1,23 +1,24 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <math.h>
 
-#define Trigger 2
-#define Echo    4
-#define ledPin  13
-
-long t;
-long d;
+// Pines
+const int tempPin = 32;
+const int ledPin = 14;
+const float BETA = 3950;
 
 const char* ssid     = "Wokwi-GUEST";
 const char* password = "";
 const char* mqtt_server = "broker.hivemq.com";
-
-const char* topicDistance = "/indobot/p/ultrasonic/distance";
-const char* topicAlert = "/indobot/p/ultrasonic/alert";
+const char* topicTemp = "/indobot/p/temp/value";
+const char* topicAlert = "/indobot/p/temp/alert";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// Última temperatura publicada
+float lastTemperature = -1000.0;
 
 void setup_wifi() {
   Serial.print("Conectando a ");
@@ -32,17 +33,15 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {}
-
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Intentando MQTT...");
-    String clientId = "ESP32Ultrasonic-";
+    String clientId = "ESP32TempClient-";
     clientId += String(random(0xffff), HEX);
     if (client.connect(clientId.c_str())) {
-      Serial.println("Conectado");
+      Serial.println("conectado");
     } else {
-      Serial.print("FallÃ³, rc=");
+      Serial.print("falló rc=");
       Serial.print(client.state());
       Serial.println(" reintentando en 5s");
       delay(5000);
@@ -51,42 +50,37 @@ void reconnect() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  pinMode(Trigger, OUTPUT);
-  pinMode(Echo, INPUT);
+  Serial.begin(9600);
+  analogReadResolution(10);
+  pinMode(tempPin, INPUT);
   pinMode(ledPin, OUTPUT);
   digitalWrite(Trigger, LOW);
   digitalWrite(ledPin, LOW);
   setup_wifi();
   client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
 }
 
 void loop() {
   if (!client.connected()) reconnect();
   client.loop();
 
-  digitalWrite(Trigger, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(Trigger, LOW);
+  int analogValue = analogRead(tempPin);
+  float celsius = 1 / (log(1 / (1023. / analogValue - 1)) / BETA + 1.0 / 298.15) - 273.15;
 
-  t = pulseIn(Echo, HIGH);
-  d = t / 59 + 1;
+  Serial.print("Temperature: ");
+  Serial.print(celsius);
+  Serial.println(" °C");
 
-  Serial.print("Distancia: ");
-  Serial.print(d);
-  Serial.println(" cm");
+  char bufTemp[8];
+  dtostrf(celsius, 1, 2, bufTemp);
+  client.publish(topicTemp, bufTemp);
 
-  char bufDist[8];
-  snprintf(bufDist, sizeof(bufDist), "%ld", d);
-  client.publish(topicDistance, bufDist);
-
-  if (d < 40) {
+  if (celsius >= 35.0) {
     digitalWrite(ledPin, HIGH);
-    client.publish(topicAlert, "NEAR");
+    client.publish(topicAlert, "ALERTA");
   } else {
     digitalWrite(ledPin, LOW);
-    client.publish(topicAlert, "CLEAR");
+    client.publish(topicAlert, "OK");
   }
   delay(1000);
 }
