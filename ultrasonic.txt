@@ -2,8 +2,8 @@ CONNECT("broker.hivemq.com", 1883)
 
 SET ULTRASONIC
 
-TOPIC ULT_DISTANCE ("/indobot/p/gas/value")
-TOPIC ULT_ALERT ("/indobot/p/gas/alert")
+TOPIC ULT_DISTANCE ("/indobot/p/ultrasonic/distance")
+TOPIC ULT_ALERT ("/indobot/p/ultrasonic/alert")
 
 TIMER PUBLISH_ULTRA (1000) {
     PUBLISH(ULT_DISTANCE, ULTRASONIC.DISTANCE)

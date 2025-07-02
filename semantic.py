@@ -10,6 +10,7 @@ class SemanticAnalyzer:
         self.SENSOR_ATTRIBUTES = {
             "PHOTORESISTOR": {"LUX", "STATUS"},
             "GASSENSOR": {"VALUE", "ALERT"},
+            "ULTRASONIC": {"DISTANCE", "ALERT"},
         }
 
     def analyze(self):
